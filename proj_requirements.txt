@@ -1,0 +1,28 @@
+This is a project website for creating tasks, subtasks and tracking the progress for them.
+
+Main features:
+1) identify yourself / log in
+a) separate routes for register and login // CHECK
+b) save passwords in hash. use json in txt //CHECK
+c) Validate data for login //CHECK
+d) protect unauthorized routes
+e) create sessions
+f) associate projects with users
+
+2) Ability to create projects
+a) figure out the structure of the dashboard
+
+3) inside of the project user is capable of creating and managing tasks
+
+4) task tracking by progress bars
+
+5) To do lists in the tasks, description and estimated/remaining time
+
+6) deploy it on AWS
+
+Side features:
+1) Database for registering users
+2) Rewarding system for completing tasks
+3) Animations
+4) Gamification
+5) Smart recommendations / alerts
