@@ -8,36 +8,56 @@ conn = psycopg2.connect(
         user="postgres",
         password="1")
 
-# Open a cursor to perform database operations
+
 cur = conn.cursor()
 
-# Execute a command: this creates a new table
-cur.execute('DROP TABLE IF EXISTS tasks;')
-cur.execute('CREATE TABLE tasks (id serial PRIMARY KEY,'
-                                 'name varchar (150) NOT NULL,'
-                                 'description varchar (255),'
-                                 'done boolean,'
-                                 'date_added date DEFAULT CURRENT_TIMESTAMP);'
-                                 )
-
-# Insert data into the table
-
-cur.execute('INSERT INTO tasks (name, description, done)'
-            'VALUES (%s, %s, %s)',
-            ('Create DB',
-             'make 3 tables of sql: users, tasks and projects',
-             False)
-            )
+cur.execute('DROP TABLE IF EXISTS "user" CASCADE;')
+cur.execute('DROP TABLE IF EXISTS dashboard CASCADE;')
+cur.execute('DROP TABLE IF EXISTS project CASCADE;')
+cur.execute('DROP TABLE IF EXISTS task CASCADE;')
+cur.execute('''
+    CREATE TABLE IF NOT EXISTS "user" (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(100) NOT NULL,
+        password VARCHAR(255) NOT NULL
+    )
+''')
 
 
-cur.execute('INSERT INTO tasks (name, description, done)'
-            'VALUES (%s, %s, %s)',
-            ('Celebrate',
-             'Buy smth cool fckng bastard',
-             True)
-            )
+cur.execute('''
+    CREATE TABLE IF NOT EXISTS dashboard (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        description VARCHAR(255),
+        user_id INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES "user" (id)
+    )
+''')
+
+
+cur.execute('''
+    CREATE TABLE IF NOT EXISTS project (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        description VARCHAR(255),
+        dashboard_id INTEGER NOT NULL,
+        FOREIGN KEY (dashboard_id) REFERENCES dashboard (id)
+    )
+''')
+
+
+cur.execute('''
+    CREATE TABLE IF NOT EXISTS task (
+        id SERIAL PRIMARY KEY,
+        project_id INTEGER NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        description VARCHAR(255),
+        done BOOLEAN DEFAULT FALSE,
+        FOREIGN KEY (project_id) REFERENCES project (id)
+    )
+''')
+
 
 conn.commit()
-
 cur.close()
 conn.close()

@@ -17,6 +17,7 @@ class Task(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False )
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(255))
+    done = db.Column(db.Boolean, nullable=False)
 
     def __repr__(self):
         return f"Task(id={self.id}, name={self.name})"
@@ -113,9 +114,9 @@ def login():
         return render_template("login.html")
 
 
-@app.route("/projects")
-def projects():
-    return
+@app.route("/dashboard_<dash_id>/project_<proj_id>/")
+def projects(id):
+    return id
 
 
 @app.route("/projects/<id>/<taskid>")
@@ -123,34 +124,34 @@ def task():
     return
 
 
-#@app.route("/todo1")
-#def todolist():
-#    to_do = Task.query.all()
-#    return render_template("todolist.html", todo_list=to_do)
-#
-#@app.route("/add/todo", methods=["POST"])
-#def add_todo():
-#    name = request.form.get("name")
-#    new_task = Task(name=name, done=False)
-#    db.session.add(new_task)
-#    db.session.commit()
-#    return redirect("/todo1")
-#
-#
-#@app.route("/update/<int:todo_id>")
-#def update(todo_id):
-#    todo = Task.query.get(todo_id)
-#    todo.done = not todo.done
-#    db.session.commit()
-#    return redirect("/todo1")
-#
-#
-#@app.route("/delete/<int:todo_id>")
-#def delete(todo_id):
-#    todo = Task.query.get(todo_id)
-#    db.session.delete(todo)
-#    db.session.commit()
-#    return redirect("/todo1")
+@app.route("/todo")
+def todolist():
+    to_do = Task.query.all()
+    return render_template("todolist.html", todo_list=to_do)
+
+@app.route("/add/todo", methods=["POST"])
+def add_todo():
+    name = request.form.get("name")
+    new_task = Task(name=name, done=False)
+    db.session.add(new_task)
+    db.session.commit()
+    return redirect("/todo1")
+
+
+@app.route("/update/<int:todo_id>")
+def update(todo_id):
+    todo = Task.query.get(todo_id)
+    todo.done = not todo.done
+    db.session.commit()
+    return redirect("/todo1")
+
+
+@app.route("/delete/<int:todo_id>")
+def delete(todo_id):
+    todo = Task.query.get(todo_id)
+    db.session.delete(todo)
+    db.session.commit()
+    return redirect("/todo1")
 
 
 if __name__ == "__main__":
