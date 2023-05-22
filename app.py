@@ -1,9 +1,46 @@
+import os
+import psycopg2
 from flask import Flask, render_template, request, session, g, url_for, redirect
 import bcrypt
 import json
 from flask_sqlalchemy import SQLAlchemy
 
+
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Yernar2001@localhost/project_planning'
+#app.config['']
+db = SQLAlchemy(app)
+
+
+class Task(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False )
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(255))
+
+    def __repr__(self):
+        return f"Task(id={self.id}, name={self.name})"
+
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+
+
+class Project(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(255))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+
+def get_db_connection():
+    conn = psycopg2.connect(host='localhost',
+                            database='project_planning',
+                            user="postgres",
+                            password="1")
+    return conn
 
 
 def load_user_data(filename):
@@ -84,6 +121,36 @@ def projects():
 @app.route("/projects/<id>/<taskid>")
 def task():
     return
+
+
+#@app.route("/todo1")
+#def todolist():
+#    to_do = Task.query.all()
+#    return render_template("todolist.html", todo_list=to_do)
+#
+#@app.route("/add/todo", methods=["POST"])
+#def add_todo():
+#    name = request.form.get("name")
+#    new_task = Task(name=name, done=False)
+#    db.session.add(new_task)
+#    db.session.commit()
+#    return redirect("/todo1")
+#
+#
+#@app.route("/update/<int:todo_id>")
+#def update(todo_id):
+#    todo = Task.query.get(todo_id)
+#    todo.done = not todo.done
+#    db.session.commit()
+#    return redirect("/todo1")
+#
+#
+#@app.route("/delete/<int:todo_id>")
+#def delete(todo_id):
+#    todo = Task.query.get(todo_id)
+#    db.session.delete(todo)
+#    db.session.commit()
+#    return redirect("/todo1")
 
 
 if __name__ == "__main__":
