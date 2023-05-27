@@ -7,70 +7,37 @@ from flask_sqlalchemy import SQLAlchemy
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Yernar2001@localhost/project_planning'
-#app.config['']
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:1@localhost:5433/project_planning'
 db = SQLAlchemy(app)
-
-
-class Task(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False )
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(255))
-    done = db.Column(db.Boolean, nullable=False)
-
-    def __repr__(self):
-        return f"Task(id={self.id}, name={self.name})"
 
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=False)
     password = db.Column(db.String(255), nullable=False)
 
 
-class Project(db.Model):
+class Dashboard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(255))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 
-def get_db_connection():
-    conn = psycopg2.connect(host='localhost',
-                            database='project_planning',
-                            user="postgres",
-                            password="1")
-    return conn
+class Project(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(255))
+    dashboard_id = db.Column(db.Integer, db.ForeignKey('dashboard.id'), nullable=False)
 
 
-def load_user_data(filename):
-    with open(file=filename) as file:
-        data = json.load(file)
-        return data
-
-
-def validate_user(username, password):
-    user_data = load_user_data("users.json")
-    for user_entry in user_data:
-        if user_entry["username"] == username:
-            stored_password = user_entry["password"].encode("utf-8")
-            entered_password = password.encode("utf-8")
-            if bcrypt.checkpw(entered_password, stored_password):
-                return True
-    return False
-
-
-def save_in_txt(username, hash, email):
-    user_data = {
-        "username": username,
-        "email": email,
-        "password": hash.decode("utf-8")
-    }
-    existing_data = load_user_data("users.json")
-    existing_data.append(user_data)
-    with open(file="users.json", mode="w") as file:
-        json.dump(existing_data, file)
+class Task(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(255))
+    done = db.Column(db.Boolean, nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
 
 
 @app.route("/")
@@ -81,14 +48,17 @@ def index():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        # handle registration form
+
         username = request.form["username"]
         email = request.form["email"]
         password = request.form["password"]
-        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()) # hash password
-        # here write datas to txt
-        save_in_txt(username, hashed_password, email)
-        # also add error handling
+        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+
+        user = User(username=username, email=email, password=hashed_password.decode("utf-8"))
+
+        db.session.add(user)
+        db.session.commit()
+
         return redirect(url_for("login"))
     else:
         # render register template
@@ -98,30 +68,34 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        # handle registration form
         username = request.form["username"]
         password = request.form["password"]
 
-        if validate_user(username, password):
-            return redirect("/")
-        else:
-            return render_template("login.html", error_message="Invalid credentials")
-        # add sessions
-        # session["user_id"] = user.id
+        user = User.query.filter_by(username=username).first()
+        print(user)
+        if user:
+            hashed_password = user.password.encode("utf-8")
+            print(hashed_password)
+            print(password.encode("utf-8"))
+            print(bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()))
+            print(bcrypt.checkpw(password.encode("utf-8"), hashed_password))
+            if bcrypt.checkpw(password.encode("utf-8"), hashed_password):
+                return redirect("/")
+        return render_template("login.html", error_message="Invalid credentials")
 
     else:
         # render login template
         return render_template("login.html")
 
 
-@app.route("/dashboard_<dash_id>/project_<proj_id>/")
-def projects(id):
-    return id
-
-
-@app.route("/projects/<id>/<taskid>")
-def task():
-    return
+#@app.route("/dashboard_<dash_id>/project_<proj_id>/")
+#def projects(id):
+#    return id
+#
+#
+#@app.route("/projects/<id>/<taskid>")
+#def task():
+#    return
 
 
 @app.route("/todo")

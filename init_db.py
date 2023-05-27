@@ -18,6 +18,7 @@ cur.execute('DROP TABLE IF EXISTS task CASCADE;')
 cur.execute('''
     CREATE TABLE IF NOT EXISTS "user" (
         id SERIAL PRIMARY KEY,
+        username VARCHAR(100) NOT NULL,
         email VARCHAR(100) NOT NULL,
         password VARCHAR(255) NOT NULL
     )
@@ -49,10 +50,10 @@ cur.execute('''
 cur.execute('''
     CREATE TABLE IF NOT EXISTS task (
         id SERIAL PRIMARY KEY,
-        project_id INTEGER NOT NULL,
         name VARCHAR(100) NOT NULL,
         description VARCHAR(255),
         done BOOLEAN DEFAULT FALSE,
+        project_id INTEGER NOT NULL,
         FOREIGN KEY (project_id) REFERENCES project (id)
     )
 ''')
