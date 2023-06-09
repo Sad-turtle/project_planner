@@ -37,24 +37,12 @@ cur.execute('''
 
 
 cur.execute('''
-    CREATE TABLE IF NOT EXISTS project (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        description VARCHAR(255),
-        dashboard_id INTEGER NOT NULL,
-        FOREIGN KEY (dashboard_id) REFERENCES dashboard (id)
-    )
-''')
-
-
-cur.execute('''
     CREATE TABLE IF NOT EXISTS task (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        description VARCHAR(255),
+        name VARCHAR(255) NOT NULL,
         done BOOLEAN DEFAULT FALSE,
-        project_id INTEGER NOT NULL,
-        FOREIGN KEY (project_id) REFERENCES project (id)
+        user_id INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES "user" (id)
     )
 ''')
 

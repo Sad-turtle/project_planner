@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dashboard</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+  </head>
+  <body>
+    <div style="margin-top: 50px;" class="ui container">
+        <h1 class="ui center aligned header">Welcome, {{ user.username }}!</h1>
+        <h2>Your Dashboard: {{ dashboard.name }}</h2>
+        <form class="ui form" action="{{url_for('add_todo', user_id=user.id)}}" method="post">
+            <div>
+            <label> Enter the task</label>
+            <input type="text" name="name">
+            <button class="ui blue button" type="submit">Add task</button>
+            </div>
+        </form><br><br>
+        <h3>Your Tasks:</h3>
+        {% for todo in todo_list %}
+        <div class="ui segment">
+            <p class="ui big header">{{todo.id }} | {{ todo.name }}</p>
+
+            {% if todo.done == False %}
+            <span class="ui gray label">Not Complete</span>
+            {% else %}
+            <span class="ui green label">Completed</span>
+            {% endif %}
+
+            <a class="ui blue button" href="{{url_for('update_todo', user_id=user.id, todo_id=todo.id)}}">Update</a>
+            <a class="ui red button" href="{{url_for('delete_todo', user_id=user.id, todo_id=todo.id)}}">Delete</a>
+        </div>
+        {%endfor%}
+
+
+    </div>
+
+  </body>
+</html>

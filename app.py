@@ -2,7 +2,6 @@ import os
 import psycopg2
 from flask import Flask, render_template, request, session, g, url_for, redirect
 import bcrypt
-import json
 from flask_sqlalchemy import SQLAlchemy
 
 
@@ -25,19 +24,11 @@ class Dashboard(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 
-class Project(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(255))
-    dashboard_id = db.Column(db.Integer, db.ForeignKey('dashboard.id'), nullable=False)
-
-
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(255))
+    name = db.Column(db.String(255), nullable=False)
     done = db.Column(db.Boolean, nullable=False)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 
 @app.route("/")
@@ -72,15 +63,10 @@ def login():
         password = request.form["password"]
 
         user = User.query.filter_by(username=username).first()
-        print(user)
         if user:
             hashed_password = user.password.encode("utf-8")
-            print(hashed_password)
-            print(password.encode("utf-8"))
-            print(bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()))
-            print(bcrypt.checkpw(password.encode("utf-8"), hashed_password))
             if bcrypt.checkpw(password.encode("utf-8"), hashed_password):
-                return redirect("/")
+                return redirect(url_for("dashboard", user_id=user.id))
         return render_template("login.html", error_message="Invalid credentials")
 
     else:
@@ -88,44 +74,50 @@ def login():
         return render_template("login.html")
 
 
-#@app.route("/dashboard_<dash_id>/project_<proj_id>/")
-#def projects(id):
-#    return id
-#
-#
-#@app.route("/projects/<id>/<taskid>")
-#def task():
-#    return
-
-
-@app.route("/todo")
-def todolist():
+@app.route("/dashboard/<user_id>")
+def dashboard(user_id):
+    user = User.query.get(user_id)
+    dashboard = Dashboard.query.filter_by(user_id=user_id).first()
     to_do = Task.query.all()
-    return render_template("todolist.html", todo_list=to_do)
+    if user:
+        if not dashboard:
+            dashboard = Dashboard(name="My Dashboard", user_id=user_id)
+            db.session.add(dashboard)
+            db.session.commit()
+        return render_template("dashboard.html", user=user, dashboard=dashboard, todo_list=to_do)
+    else:
+        return "User not found"
 
-@app.route("/add/todo", methods=["POST"])
-def add_todo():
+
+#@app.route("/dashboard/<user_id>/todo")
+#def todolist():
+#    to_do = Task.query.all()
+#    return render_template("todolist.html", todo_list=to_do)
+
+
+@app.route("/dashboard/<user_id>/add", methods=["POST"])
+def add_todo(user_id):
     name = request.form.get("name")
-    new_task = Task(name=name, done=False)
+    new_task = Task(name=name, done=False, user_id=user_id)
     db.session.add(new_task)
     db.session.commit()
-    return redirect("/todo1")
+    return redirect(url_for("dashboard", user_id=user_id))
 
 
-@app.route("/update/<int:todo_id>")
-def update(todo_id):
-    todo = Task.query.get(todo_id)
+@app.route("/dashboard/<user_id>/update/<int:todo_id>")
+def update_todo(user_id, todo_id):
+    todo = Task.query.filter_by(id=todo_id).first()
     todo.done = not todo.done
     db.session.commit()
-    return redirect("/todo1")
+    return redirect(url_for("dashboard", user_id=user_id))
 
 
-@app.route("/delete/<int:todo_id>")
-def delete(todo_id):
-    todo = Task.query.get(todo_id)
+@app.route("/dashboard/<user_id>/delete/<int:todo_id>")
+def delete_todo(user_id, todo_id):
+    todo = Task.query.filter_by(id=todo_id).first()
     db.session.delete(todo)
     db.session.commit()
-    return redirect("/todo1")
+    return redirect(url_for("dashboard", user_id=user_id))
 
 
 if __name__ == "__main__":
