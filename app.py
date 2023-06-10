@@ -1,5 +1,4 @@
 import os
-import psycopg2
 from flask import Flask, render_template, request, session, g, url_for, redirect
 import bcrypt
 from flask_sqlalchemy import SQLAlchemy
@@ -89,12 +88,6 @@ def dashboard(user_id):
         return "User not found"
 
 
-#@app.route("/dashboard/<user_id>/todo")
-#def todolist():
-#    to_do = Task.query.all()
-#    return render_template("todolist.html", todo_list=to_do)
-
-
 @app.route("/dashboard/<user_id>/add", methods=["POST"])
 def add_todo(user_id):
     name = request.form.get("name")
@@ -121,5 +114,5 @@ def delete_todo(user_id, todo_id):
 
 
 if __name__ == "__main__":
-    app.run(host="192.168.0.119", port="8080")
+    app.run(host="0.0.0.0")
 
